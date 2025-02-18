@@ -58,6 +58,32 @@ pub struct ElapsedTime {
     seconds: u64,
 }
 
+enum TimeUnit {
+    Years,
+    Months,
+    Days,
+    Hours,
+    Minutes,
+    Seconds,
+}
+
+fn format_timeunit(tu: &TimeUnit, value: u64) -> String {
+    match tu {
+        TimeUnit::Years if value == 1 => format!("{}&nbsp;Jahr", value),
+        TimeUnit::Years => format!("{}&nbsp;Jahre", value),
+        TimeUnit::Months if value == 1 => format!("{}&nbsp;Monat", value),
+        TimeUnit::Months => format!("{}&nbsp;Monate", value),
+        TimeUnit::Days if value == 1 => format!("{}&nbsp;Tag", value),
+        TimeUnit::Days => format!("{}&nbsp;Tage", value),
+        TimeUnit::Hours if value == 1 => format!("{}&nbsp;Stunde", value),
+        TimeUnit::Hours => format!("{}&nbsp;Stunden", value),
+        TimeUnit::Minutes if value == 1 => format!("{}&nbsp;Minute", value),
+        TimeUnit::Minutes => format!("{}&nbsp;Minuten", value),
+        TimeUnit::Seconds if value == 1 => format!("{}&nbsp;Sekunde", value),
+        TimeUnit::Seconds => format!("{}&nbsp;Sekunden", value),
+    }
+}
+
 impl ElapsedTime {
     fn get_elapsed_time(seconds: u64) -> Self {
         let years = seconds / 31536000;
@@ -143,8 +169,14 @@ fn ElapsedTimeDisp(seconds: impl Fn() -> u64 + Send + Sync + 'static) -> impl In
         <h1 class="seconds" inner_html={
             let et = ElapsedTime::get_elapsed_time(seconds());
             format!(
-                "{}&nbsp;Jahre, {}&nbsp;Monate, {}&nbsp;Tage, {}&nbsp;Stunden, {}&nbsp;Minuten und {}&nbsp;Sekunden.",
-                et.years, et.months, et.days, et.hours, et.minutes, et.seconds)} >
+                "{}, {}, {}, {}, {} und {}.",
+                format_timeunit(&TimeUnit::Years,et.years), 
+                format_timeunit(&TimeUnit::Months, et.months),
+                format_timeunit(&TimeUnit::Days, et.days),
+                format_timeunit(&TimeUnit::Hours, et.hours),
+                format_timeunit(&TimeUnit::Minutes, et.minutes),
+                format_timeunit(&TimeUnit::Seconds, et.seconds))
+                } >
         </h1>
     }
 }
