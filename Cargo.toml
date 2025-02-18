@@ -1,0 +1,45 @@
+[package]
+name = "social-timer"
+authors = ["Markus Klink <justjoheinz@gmail.com>"]
+description = ""
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = [ "cdylib" ]
+
+[dependencies]
+console_error_panic_hook = "0.1"
+leptos = { version = "0.7.0" }
+leptos_meta = { version = "0.7.0" }
+leptos_router = { version = "0.7.0" }
+leptos_wasi = { version = "0.1.3", optional = true }
+spin-sdk = { version = "3", optional = true }
+# `wasi` needs to be locked until https://github.com/fermyon/spin/issues/2928 lands in a release
+wasi = { version = "=0.13.2", optional = true }
+wasm-bindgen = { version = "0.2.100", optional = true }
+wasm-timer = "0.2"
+
+[workspace]
+
+[features]
+csr = ["leptos/csr"]
+hydrate = ["leptos/hydrate", "dep:wasm-bindgen"]
+ssr = [
+  "leptos/ssr",
+  "leptos_meta/ssr",
+  "leptos_router/ssr",
+  "leptos/spin",
+  "dep:spin-sdk",
+  "dep:leptos_wasi",
+  "dep:wasi",
+]
+
+[package.metadata.leptos]
+# The name used by wasm-bindgen/cargo-leptos for the JS/WASM bundle. Defaults to the crate name   
+output-name = "social_timer"
+style-file = "style/main.scss"
+bin-features = ["ssr"]
+bin-default-features = false
+lib-features = ["hydrate"]
+lib-default-features = false

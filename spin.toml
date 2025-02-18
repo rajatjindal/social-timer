@@ -1,0 +1,28 @@
+spin_manifest_version = 2
+
+[application]
+name = "social-timer"
+version = "0.1.3"
+authors = ["Markus Klink <justjoheinz@gmail.com>"]
+description = ""
+
+[[trigger.http]]
+route = "/..."
+component = "social-timer"
+
+[component.social-timer]
+source = "target/wasm32-wasip1/release/social_timer.wasm"
+allowed_outbound_hosts = []
+key_value_stores = ["default"]
+
+[component.social-timer.build]
+command = "cargo leptos build --release && LEPTOS_OUTPUT_NAME=social_timer cargo build --lib --target wasm32-wasip1 --release --no-default-features --features ssr"
+watch = ["src/**/*.rs", "style/**/*.scss", "Cargo.toml"]
+
+[[trigger.http]]
+route = "/pkg/..."
+component = "social-timer-pkg"
+
+[component.social-timer-pkg]
+source = { url = "https://github.com/fermyon/spin-fileserver/releases/download/v0.1.0/spin_static_fs.wasm", digest = "sha256:96c76d9af86420b39eb6cd7be5550e3cb5d4cc4de572ce0fd1f6a29471536cb4" }
+files = [{ source = "target/site/pkg", destination = "/" }]
