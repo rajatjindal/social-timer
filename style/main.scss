@@ -17,3 +17,17 @@ body {
 .subtitle {
 	color: white;
 }
+
+button {
+	color: #ffffff;
+	background-color: #f24236;
+	font-size: 19px;
+	border: 2px solid #7b0928;
+	border-radius: 16px;
+	padding: 15px 50px;
+	cursor: pointer
+}
+button:hover {
+	color: #7b0928;
+	background-color: #ffffff;
+}
