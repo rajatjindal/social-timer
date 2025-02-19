@@ -155,7 +155,7 @@ fn HomePage() -> impl IntoView {
     };
 
     view! {
-        <h1 class="title">"Sekunden ohne LinkedIn Vorschlag"</h1>
+        <h1 class="title">"Sekunden ohne "<img class="logo" src="/static/LI-Logo.png" width="15%"/> "Vorschlag"</h1>
         {move || {
             match current_count.get() {
                 Some(last_update_result) => {

@@ -18,6 +18,15 @@ body {
 	color: white;
 }
 
+.logo {
+	background-color: white;
+	padding: 10px;
+	border: 2px solid white;
+	border-radius: 16px;
+	vertical-align: middle;
+	margin-right: 8px;
+}
+
 button {
 	color: #ffffff;
 	background-color: #f24236;
@@ -27,6 +36,7 @@ button {
 	padding: 15px 50px;
 	cursor: pointer
 }
+
 button:hover {
 	color: #7b0928;
 	background-color: #ffffff;
