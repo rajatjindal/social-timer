@@ -49,6 +49,7 @@ pub fn App() -> impl IntoView {
     }
 }
 
+#[derive(Debug, Eq, Clone, PartialEq)]
 pub struct ElapsedTime {
     years: u64,
     months: u64,
@@ -67,31 +68,38 @@ enum TimeUnit {
     Seconds,
 }
 
-fn format_timeunit(tu: &TimeUnit, value: u64) -> String {
-    match tu {
-        TimeUnit::Years if value == 1 => format!("{}&nbsp;Jahr", value),
-        TimeUnit::Years => format!("{}&nbsp;Jahre", value),
-        TimeUnit::Months if value == 1 => format!("{}&nbsp;Monat", value),
-        TimeUnit::Months => format!("{}&nbsp;Monate", value),
-        TimeUnit::Days if value == 1 => format!("{}&nbsp;Tag", value),
-        TimeUnit::Days => format!("{}&nbsp;Tage", value),
-        TimeUnit::Hours if value == 1 => format!("{}&nbsp;Stunde", value),
-        TimeUnit::Hours => format!("{}&nbsp;Stunden", value),
-        TimeUnit::Minutes if value == 1 => format!("{}&nbsp;Minute", value),
-        TimeUnit::Minutes => format!("{}&nbsp;Minuten", value),
-        TimeUnit::Seconds if value == 1 => format!("{}&nbsp;Sekunde", value),
-        TimeUnit::Seconds => format!("{}&nbsp;Sekunden", value),
+impl TimeUnit {
+    fn format_timeunit(&self, value: u64) -> String {
+        match self {
+            TimeUnit::Years if value == 1 => format!("{}&nbsp;Jahr", value),
+            TimeUnit::Years => format!("{}&nbsp;Jahre", value),
+            TimeUnit::Months if value == 1 => format!("{}&nbsp;Monat", value),
+            TimeUnit::Months => format!("{}&nbsp;Monate", value),
+            TimeUnit::Days if value == 1 => format!("{}&nbsp;Tag", value),
+            TimeUnit::Days => format!("{}&nbsp;Tage", value),
+            TimeUnit::Hours if value == 1 => format!("{}&nbsp;Stunde", value),
+            TimeUnit::Hours => format!("{}&nbsp;Stunden", value),
+            TimeUnit::Minutes if value == 1 => format!("{}&nbsp;Minute", value),
+            TimeUnit::Minutes => format!("{}&nbsp;Minuten", value),
+            TimeUnit::Seconds if value == 1 => format!("{}&nbsp;Sekunde", value),
+            TimeUnit::Seconds => format!("{}&nbsp;Sekunden", value),
+        }
     }
 }
 
 impl ElapsedTime {
+    const SECONDS_IN_YEAR: u64 = 31536000;
+    const SECONDS_IN_MONTH: u64 = 2592000;
+    const SECONDS_IN_DAY: u64 = 86400;
+    const SECONDS_IN_HOUR: u64 = 3600;
     fn get_elapsed_time(seconds: u64) -> Self {
-        let years = seconds / 31536000;
-        let months = (seconds % 31536000) / 2592000;
-        let days = ((seconds % 31536000) % 2592000) / 86400;
-        let hours = (((seconds % 31536000) % 2592000) % 86400) / 3600;
-        let minutes = ((((seconds % 31536000) % 2592000) % 86400) % 3600) / 60;
-        let seconds = ((((seconds % 31536000) % 2592000) % 86400) % 3600) % 60;
+        let years = seconds / Self::SECONDS_IN_YEAR;
+        let months = (seconds % Self::SECONDS_IN_YEAR) / Self::SECONDS_IN_MONTH;
+        let days = ((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH) / Self::SECONDS_IN_DAY;
+        let hours = (((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH) % Self::SECONDS_IN_DAY) / Self::SECONDS_IN_HOUR;
+        let minutes = ((((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH) % Self::SECONDS_IN_DAY) % Self::SECONDS_IN_HOUR) / 60;
+        let seconds = ((((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH) % Self::SECONDS_IN_DAY) % Self::SECONDS_IN_HOUR) % 60;
+
 
         ElapsedTime {
             years,
@@ -126,6 +134,11 @@ fn HomePage() -> impl IntoView {
     // Creates a reactive value to update the button
     let (count, set_count) = signal::<u64>(0);
 
+    // Initialize the count
+    let epoch = current_epoch();
+    set_count.set(epoch);
+
+    // update every second
     use_interval(1000, move || {
         let epoch = current_epoch();
         set_count.set(epoch);
@@ -147,12 +160,12 @@ fn HomePage() -> impl IntoView {
             match current_count.get() {
                 Some(last_update_result) => {
                     let lu2 = last_update_result.unwrap();
-                
+
                     view! {
                         // something is off here, the seconds are not updating without
                         // the p tag.
-                        <ElapsedTimeDisp seconds={move ||  count.get() - lu2 } />
-                        <p style="display: none"> {format!("{} Sekunden", count.get() - lu2)} </p>
+                        <ElapsedTimeDisp seconds={move || count.get() - lu2} />
+                        <p style="display: none">{format!("{} Sekunden", count.get() - lu2)}</p>
                         <button on:click=on_click>"Ich habe einen Vorschlag!"</button>
                     }
                         .into_any()
@@ -166,18 +179,21 @@ fn HomePage() -> impl IntoView {
 #[component]
 fn ElapsedTimeDisp(seconds: impl Fn() -> u64 + Send + Sync + 'static) -> impl IntoView {
     view! {
-        <h1 class="seconds" inner_html={
-            let et = ElapsedTime::get_elapsed_time(seconds());
-            format!(
-                "{}, {}, {}, {}, {} und {}.",
-                format_timeunit(&TimeUnit::Years,et.years), 
-                format_timeunit(&TimeUnit::Months, et.months),
-                format_timeunit(&TimeUnit::Days, et.days),
-                format_timeunit(&TimeUnit::Hours, et.hours),
-                format_timeunit(&TimeUnit::Minutes, et.minutes),
-                format_timeunit(&TimeUnit::Seconds, et.seconds))
-                } >
-        </h1>
+        <h1
+            class="seconds"
+            inner_html={
+                let et = ElapsedTime::get_elapsed_time(seconds());
+                format!(
+                    "{}, {}, {}, {}, {} und {}.",
+                    TimeUnit::Years.format_timeunit(et.years),
+                    TimeUnit::Months.format_timeunit(et.months),
+                    TimeUnit::Days.format_timeunit(et.days),
+                    TimeUnit::Hours.format_timeunit(et.hours),
+                    TimeUnit::Minutes.format_timeunit(et.minutes),
+                    TimeUnit::Seconds.format_timeunit(et.seconds),
+                )
+            }
+        ></h1>
     }
 }
 
