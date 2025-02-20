@@ -15,7 +15,7 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: 1.85
-          targets: wasm32-wasip1
+          targets: wasm32-unknown-unknown, wasm32-wasip1
 
       - name: install cargo leptos
         uses: baptiste0928/cargo-install@v3
