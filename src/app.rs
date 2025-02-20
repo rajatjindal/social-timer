@@ -81,6 +81,7 @@ impl ElapsedTime {
     }
 }
 
+/// retrieve the current epoch time in seconds.
 fn current_epoch() -> u64 {
     wasm_timer::SystemTime::now()
         .duration_since(wasm_timer::UNIX_EPOCH)
