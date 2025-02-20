@@ -17,6 +17,11 @@ jobs:
           toolchain: 1.85
           targets: wasm32-wasip1
 
+      - name: install cargo leptos
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: cargo-leptos
+    
       - name: Install Spin
         uses: fermyon/actions/spin/setup@v1
 
