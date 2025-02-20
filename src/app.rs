@@ -164,7 +164,6 @@ fn HomePage() -> impl IntoView {
 
     // click handler set last_update to now
     let on_click = move |_| {
-        println!("Button clicked");
         spawn_local(async move {
             let current_epoch = current_epoch();
             reset_count(current_epoch).await.unwrap();
@@ -174,30 +173,30 @@ fn HomePage() -> impl IntoView {
     };
 
     view! {
-        <h1 class="title">"Sekunden ohne "<img class="logo" src="/static/LI-Logo.png" width="15%"/> "Vorschlag"</h1>
+        <h1 class="title">
+            "Sekunden ohne "<img class="logo" src="/static/LI-Logo.png" width="15%" /> "Vorschlag"
+        </h1>
         {move || {
             match last_update_resource.get() {
                 Some(resource_result) => {
                     let lu2 = resource_result.unwrap();
 
                     view! {
-                        <ElapsedTimeDisp seconds={count} last_update=lu2></ElapsedTimeDisp>
+                        <ElapsedTimeDisp seconds=count last_update=lu2></ElapsedTimeDisp>
                         <button on:click=on_click>"Ich habe einen Vorschlag!"</button>
                     }.into_any()
                 }
                 None => view! { <h1 class="seconds">"Loading value"</h1> }.into_any(),
             }
         }}
+
     }
 }
 
 #[component]
 fn ElapsedTimeDisp(seconds: ReadSignal<u64>, last_update: u64) -> impl IntoView {
     let et = move || {ElapsedTime::get_elapsed_time(seconds.get() - last_update)};
-    view! {
-        <h1 class="seconds" inner_html={move || et().fmt_output()}>
-        </h1>
-    }
+    view! { <h1 class="seconds" inner_html=move || et().fmt_output()></h1> }
 }
 
 /// 404 - Not Found
