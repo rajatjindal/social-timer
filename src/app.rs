@@ -1,53 +1,10 @@
+use std::fmt::Debug;
+
 use components::{Route, Router, Routes};
 use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::*;
 use leptos_router::*;
 
-#[cfg(feature = "ssr")]
-pub fn shell(options: LeptosOptions) -> impl IntoView {
-    view! {
-        <!DOCTYPE html>
-        <html lang="en">
-            <head>
-                <meta charset="utf-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <AutoReload options=options.clone() />
-                <HydrationScripts options=options.clone() root="" />
-                <MetaTags />
-            </head>
-            <body>
-                <App />
-            </body>
-        </html>
-    }
-}
-
-#[component]
-pub fn App() -> impl IntoView {
-    // Provides context that manages stylesheets, titles, meta tags, etc.
-    provide_meta_context();
-
-    let fallback = || view! { "Page not found." }.into_view();
-
-    view! {
-        <Stylesheet id="leptos" href="/pkg/social_timer.css" />
-        <Meta
-            name="description"
-            content="A website running its server-side as a WASI Component :D"
-        />
-
-        <Title text="Social Timer" />
-
-        <Router>
-            <main>
-                <Routes fallback>
-                    <Route path=path!("") view=HomePage />
-                    <Route path=path!("/*any") view=NotFound />
-                </Routes>
-            </main>
-        </Router>
-    }
-}
 
 #[derive(Debug, Eq, Clone, PartialEq)]
 pub struct ElapsedTime {
@@ -92,6 +49,7 @@ impl ElapsedTime {
     const SECONDS_IN_MONTH: u64 = 2592000;
     const SECONDS_IN_DAY: u64 = 86400;
     const SECONDS_IN_HOUR: u64 = 3600;
+
     fn get_elapsed_time(seconds: u64) -> Self {
         let years = seconds / Self::SECONDS_IN_YEAR;
         let months = (seconds % Self::SECONDS_IN_YEAR) / Self::SECONDS_IN_MONTH;
@@ -110,6 +68,17 @@ impl ElapsedTime {
             seconds,
         }
     }
+
+    fn fmt_output(&self) -> String {
+       format!(
+            "{}, {}, {}, {}, {} und {}.",
+            TimeUnit::Years.format_timeunit(self.years),
+            TimeUnit::Months.format_timeunit(self.months),
+            TimeUnit::Days.format_timeunit(self.days),
+            TimeUnit::Hours.format_timeunit(self.hours),
+            TimeUnit::Minutes.format_timeunit(self.minutes),
+            TimeUnit::Seconds.format_timeunit(self.seconds))
+    }
 }
 
 fn current_epoch() -> u64 {
@@ -119,11 +88,67 @@ fn current_epoch() -> u64 {
         .as_secs()
 }
 
+#[cfg(feature = "ssr")]
+pub fn shell(options: LeptosOptions) -> impl IntoView {
+    view! {
+        <!DOCTYPE html>
+        <html lang="en">
+            <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+                <AutoReload options=options.clone() />
+                <HydrationScripts options=options.clone() root="" />
+                <MetaTags />
+            </head>
+            <body>
+                <App />
+            </body>
+        </html>
+    }
+}
+
+#[component]
+pub fn App() -> impl IntoView {
+    // Provides context that manages stylesheets, titles, meta tags, etc.
+    provide_meta_context();
+
+    let fallback = || view! { "Page not found." }.into_view();
+
+    view! {
+        <Stylesheet id="leptos" href="/pkg/social_timer.css" />
+        <Meta
+            name="description"
+            content="A website running its server-side as a WASI Component :D"
+        />
+
+        <Title text="Social Timer" />
+
+        <Router>
+            <main>
+                <Routes fallback>
+                    <Route path=path!("") view=HomePage />
+                    <Route path=path!("/*any") view=NotFound />
+                </Routes>
+            </main>
+        </Router>
+    }
+}
+
+
 /// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
+    // Initialize the count
+    let epoch = current_epoch();
+
+    // when did the last update happen (submission to server)
     let (last_update, set_last_update) = signal(current_epoch());
-    let current_count = Resource::new(
+
+    // increasing value of the counter
+    let (count, set_count) = signal::<u64>(epoch);
+    
+    let last_update_resource = Resource::new(
         move || last_update.get(),
         |last| async move {
             println!("Getting value via resource");
@@ -131,69 +156,47 @@ fn HomePage() -> impl IntoView {
         },
     );
 
-    // Creates a reactive value to update the button
-    let (count, set_count) = signal::<u64>(0);
-
-    // Initialize the count
-    let epoch = current_epoch();
-    set_count.set(epoch);
-
     // update every second
     use_interval(1000, move || {
         let epoch = current_epoch();
-        set_count.set(epoch);
+        set_count(epoch);
     });
 
+    // click handler set last_update to now
     let on_click = move |_| {
         println!("Button clicked");
         spawn_local(async move {
             let current_epoch = current_epoch();
             reset_count(current_epoch).await.unwrap();
-            set_last_update.set(current_epoch);
-            set_count.set(0);
+            set_last_update(current_epoch);
+            set_count(current_epoch);
         });
     };
 
     view! {
         <h1 class="title">"Sekunden ohne "<img class="logo" src="/static/LI-Logo.png" width="15%"/> "Vorschlag"</h1>
         {move || {
-            match current_count.get() {
-                Some(last_update_result) => {
-                    let lu2 = last_update_result.unwrap();
+            match last_update_resource.get() {
+                Some(resource_result) => {
+                    let lu2 = resource_result.unwrap();
 
                     view! {
-                        // something is off here, the seconds are not updating without
-                        // the p tag.
-                        <ElapsedTimeDisp seconds={move || count.get() - lu2} />
-                        <p style="display: none">{format!("{} Sekunden", count.get() - lu2)}</p>
+                        <ElapsedTimeDisp seconds={count} last_update=lu2></ElapsedTimeDisp>
                         <button on:click=on_click>"Ich habe einen Vorschlag!"</button>
-                    }
-                        .into_any()
+                    }.into_any()
                 }
-                None => view! { <p>"Loading value"</p> }.into_any(),
+                None => view! { <h1 class="seconds">"Loading value"</h1> }.into_any(),
             }
         }}
     }
 }
 
 #[component]
-fn ElapsedTimeDisp(seconds: impl Fn() -> u64 + Send + Sync + 'static) -> impl IntoView {
+fn ElapsedTimeDisp(seconds: ReadSignal<u64>, last_update: u64) -> impl IntoView {
+    let et = move || {ElapsedTime::get_elapsed_time(seconds.get() - last_update)};
     view! {
-        <h1
-            class="seconds"
-            inner_html={
-                let et = ElapsedTime::get_elapsed_time(seconds());
-                format!(
-                    "{}, {}, {}, {}, {} und {}.",
-                    TimeUnit::Years.format_timeunit(et.years),
-                    TimeUnit::Months.format_timeunit(et.months),
-                    TimeUnit::Days.format_timeunit(et.days),
-                    TimeUnit::Hours.format_timeunit(et.hours),
-                    TimeUnit::Minutes.format_timeunit(et.minutes),
-                    TimeUnit::Seconds.format_timeunit(et.seconds),
-                )
-            }
-        ></h1>
+        <h1 class="seconds" inner_html={move || et().fmt_output()}>
+        </h1>
     }
 }
 
@@ -218,19 +221,20 @@ fn NotFound() -> impl IntoView {
     view! { <h1>"Not Found"</h1> }
 }
 
+/// Get the last update value from the server.
 #[server(prefix = "/api")]
 pub async fn get_count(ep: u64) -> Result<u64, ServerFnError<String>> {
-    println!("Getting value");
+    println!("Getting value from server");
     let store = spin_sdk::key_value::Store::open_default().map_err(|e| e.to_string())?;
     let count = store.get_json::<u64>("social_timer_count");
 
     match count {
         Ok(Some(c)) => {
-            println!("Got value {}", c);
+            println!("Found value on server {}", c);
             Ok(c)
         }
         Ok(None) => {
-            println!("No value found, resetting to 0");
+            println!("No value on server found, resetting to {}", ep);
             reset_count(ep).await.expect("Cannot reset counter");
             Ok(ep)
         }
@@ -242,9 +246,12 @@ pub async fn get_count(ep: u64) -> Result<u64, ServerFnError<String>> {
     }
 }
 
+/// Reset the counter to a new value on the server.
+/// This function is called when the button is clicked.
+/// The new value is the current epoch time.
 #[server(prefix = "/api")]
 pub async fn reset_count(counter: u64) -> Result<u64, ServerFnError<String>> {
-    println!("Resetting value");
+    println!("Resetting value on server");
     let store = spin_sdk::key_value::Store::open_default().map_err(|e| e.to_string())?;
     store
         .set_json("social_timer_count", &counter)
