@@ -2,7 +2,7 @@ spin_manifest_version = 2
 
 [application]
 name = "social-timer"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["Markus Klink <justjoheinz@gmail.com>"]
 description = ""
 
