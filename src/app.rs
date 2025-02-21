@@ -4,6 +4,7 @@ use components::{Route, Router, Routes};
 use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::*;
 use leptos_router::*;
+use leptos::logging::log;
 
 
 #[derive(Debug, Eq, Clone, PartialEq)]
@@ -148,11 +149,11 @@ fn HomePage() -> impl IntoView {
 
     // increasing value of the counter
     let (count, set_count) = signal::<u64>(epoch);
-    
+
     let last_update_resource = Resource::new(
         move || last_update.get(),
         |last| async move {
-            println!("Getting value via resource");
+            log!("Getting value via resource");
             get_count(last).await
         },
     );
@@ -224,22 +225,22 @@ fn NotFound() -> impl IntoView {
 /// Get the last update value from the server.
 #[server(prefix = "/api")]
 pub async fn get_count(ep: u64) -> Result<u64, ServerFnError<String>> {
-    println!("Getting value from server");
+    log!("Getting value from server");
     let store = spin_sdk::key_value::Store::open_default().map_err(|e| e.to_string())?;
     let count = store.get_json::<u64>("social_timer_count");
 
     match count {
         Ok(Some(c)) => {
-            println!("Found value on server {}", c);
+            log!("Found value on server {}", c);
             Ok(c)
         }
         Ok(None) => {
-            println!("No value on server found, resetting to {}", ep);
+            log!("No value on server found, resetting to {}", ep);
             reset_count(ep).await.expect("Cannot reset counter");
             Ok(ep)
         }
         Err(e) => {
-            println!("Error getting value {} , resetting value to {}", e, ep);
+            log!("Error getting value {} , resetting value to {}", e, ep);
             reset_count(ep).await.expect("Cannot reset counter");
             Ok(ep)
         }
@@ -251,7 +252,7 @@ pub async fn get_count(ep: u64) -> Result<u64, ServerFnError<String>> {
 /// The new value is the current epoch time.
 #[server(prefix = "/api")]
 pub async fn reset_count(counter: u64) -> Result<u64, ServerFnError<String>> {
-    println!("Resetting value on server");
+    log!("Resetting value on server");
     let store = spin_sdk::key_value::Store::open_default().map_err(|e| e.to_string())?;
     store
         .set_json("social_timer_count", &counter)

@@ -36,7 +36,7 @@ ssr = [
 ]
 
 [package.metadata.leptos]
-# The name used by wasm-bindgen/cargo-leptos for the JS/WASM bundle. Defaults to the crate name   
+# The name used by wasm-bindgen/cargo-leptos for the JS/WASM bundle. Defaults to the crate name
 output-name = "social_timer"
 style-file = "style/main.scss"
 bin-features = ["ssr"]
