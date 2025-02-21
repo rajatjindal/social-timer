@@ -185,12 +185,12 @@ fn HomePage() -> impl IntoView {
                     view! {
                         <ElapsedTimeDisp seconds=count last_update=lu2></ElapsedTimeDisp>
                         <button on:click=on_click>"Ich habe einen Vorschlag!"</button>
-                    }.into_any()
+                    }
+                        .into_any()
                 }
                 None => view! { <h1 class="seconds">"Loading value"</h1> }.into_any(),
             }
         }}
-
     }
 }
 
