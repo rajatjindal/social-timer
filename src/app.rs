@@ -1,11 +1,11 @@
 use std::fmt::Debug;
 
 use components::{Route, Router, Routes};
+use leptos::logging::log;
 use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::*;
 use leptos_router::*;
-use leptos::logging::log;
-
+use leptos_use::*;
 
 #[derive(Debug, Eq, Clone, PartialEq)]
 pub struct ElapsedTime {
@@ -54,11 +54,19 @@ impl ElapsedTime {
     fn get_elapsed_time(seconds: u64) -> Self {
         let years = seconds / Self::SECONDS_IN_YEAR;
         let months = (seconds % Self::SECONDS_IN_YEAR) / Self::SECONDS_IN_MONTH;
-        let days = ((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH) / Self::SECONDS_IN_DAY;
-        let hours = (((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH) % Self::SECONDS_IN_DAY) / Self::SECONDS_IN_HOUR;
-        let minutes = ((((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH) % Self::SECONDS_IN_DAY) % Self::SECONDS_IN_HOUR) / 60;
-        let seconds = ((((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH) % Self::SECONDS_IN_DAY) % Self::SECONDS_IN_HOUR) % 60;
-
+        let days =
+            ((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH) / Self::SECONDS_IN_DAY;
+        let hours = (((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH)
+            % Self::SECONDS_IN_DAY)
+            / Self::SECONDS_IN_HOUR;
+        let minutes = ((((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH)
+            % Self::SECONDS_IN_DAY)
+            % Self::SECONDS_IN_HOUR)
+            / 60;
+        let seconds = ((((seconds % Self::SECONDS_IN_YEAR) % Self::SECONDS_IN_MONTH)
+            % Self::SECONDS_IN_DAY)
+            % Self::SECONDS_IN_HOUR)
+            % 60;
 
         ElapsedTime {
             years,
@@ -71,14 +79,15 @@ impl ElapsedTime {
     }
 
     fn fmt_output(&self) -> String {
-       format!(
+        format!(
             "{}, {}, {}, {}, {} und {}.",
             TimeUnit::Years.format_timeunit(self.years),
             TimeUnit::Months.format_timeunit(self.months),
             TimeUnit::Days.format_timeunit(self.days),
             TimeUnit::Hours.format_timeunit(self.hours),
             TimeUnit::Minutes.format_timeunit(self.minutes),
-            TimeUnit::Seconds.format_timeunit(self.seconds))
+            TimeUnit::Seconds.format_timeunit(self.seconds)
+        )
     }
 }
 
@@ -130,13 +139,13 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes fallback>
                     <Route path=path!("") view=HomePage />
+                    <Route path=path!("/submit") view=Submit />
                     <Route path=path!("/*any") view=NotFound />
                 </Routes>
             </main>
         </Router>
     }
 }
-
 
 /// Renders the home page of your application.
 #[component]
@@ -163,6 +172,11 @@ fn HomePage() -> impl IntoView {
         let epoch = current_epoch();
         set_count(epoch);
     });
+
+
+    let UseEventSourceReturn {
+        ready_state, data, error, close, ..
+    } =  use_event_source::<u64, codee::string::FromToStringCodec>("http:://localhost:3000/sse");
 
     // click handler set last_update to now
     let on_click = move |_| {
@@ -197,8 +211,19 @@ fn HomePage() -> impl IntoView {
 
 #[component]
 fn ElapsedTimeDisp(seconds: ReadSignal<u64>, last_update: u64) -> impl IntoView {
-    let et = move || {ElapsedTime::get_elapsed_time(seconds.get() - last_update)};
+    let et = move || ElapsedTime::get_elapsed_time(seconds.get() - last_update);
     view! { <h1 class="seconds" inner_html=move || et().fmt_output()></h1> }
+}
+
+#[component]
+fn Submit() -> impl IntoView {
+    view! {
+        <div class="dialog">
+            <h1>"Submit"</h1>
+            <input type="text" />
+            <input type="text" />
+        </div>
+    }
 }
 
 /// 404 - Not Found

@@ -1,7 +1,4 @@
-use leptos::{
-    config::get_configuration,
-    task::Executor as LeptosExecutor
-};
+use leptos::{config::get_configuration, task::Executor as LeptosExecutor};
 use leptos_wasi::{
     handler::HandlerError,
     prelude::{IncomingRequest, ResponseOutparam, WasiExecutor},
@@ -9,7 +6,7 @@ use leptos_wasi::{
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::proxy::export;
 
-use crate::app::{shell, App, ResetCount, GetCount};
+use crate::app::{shell, App, GetCount, ResetCount};
 
 struct LeptosServer;
 
