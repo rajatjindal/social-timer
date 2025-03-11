@@ -5,7 +5,6 @@ use leptos::logging::log;
 use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::*;
 use leptos_router::*;
-use leptos_use::*;
 
 #[derive(Debug, Eq, Clone, PartialEq)]
 pub struct ElapsedTime {
@@ -120,6 +119,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
 }
 
 #[component]
+#[allow(non_snake_case)]
 pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
@@ -149,6 +149,7 @@ pub fn App() -> impl IntoView {
 
 /// Renders the home page of your application.
 #[component]
+#[allow(non_snake_case)]
 fn HomePage() -> impl IntoView {
     // Initialize the count
     let epoch = current_epoch();
@@ -173,10 +174,6 @@ fn HomePage() -> impl IntoView {
         set_count(epoch);
     });
 
-
-    let UseEventSourceReturn {
-        ready_state, data, error, close, ..
-    } =  use_event_source::<u64, codee::string::FromToStringCodec>("http:://localhost:3000/sse");
 
     // click handler set last_update to now
     let on_click = move |_| {
@@ -210,12 +207,14 @@ fn HomePage() -> impl IntoView {
 }
 
 #[component]
+#[allow(non_snake_case)]
 fn ElapsedTimeDisp(seconds: ReadSignal<u64>, last_update: u64) -> impl IntoView {
     let et = move || ElapsedTime::get_elapsed_time(seconds.get() - last_update);
     view! { <h1 class="seconds" inner_html=move || et().fmt_output()></h1> }
 }
 
 #[component]
+#[allow(non_snake_case)]
 fn Submit() -> impl IntoView {
     view! {
         <div class="dialog">
@@ -228,6 +227,7 @@ fn Submit() -> impl IntoView {
 
 /// 404 - Not Found
 #[component]
+#[allow(non_snake_case)]
 fn NotFound() -> impl IntoView {
     // set an HTTP status code 404
     // this is feature gated because it can only be done during

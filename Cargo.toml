@@ -19,7 +19,6 @@ spin-sdk = { version = "3", optional = true }
 wasi = { version = "=0.13.3", optional = true }
 wasm-bindgen = { version = "0.2.100", optional = true }
 wasm-timer = "0.2"
-leptos-use = { version="0.15", features = ["use_event_source", "ssr", "wasm_ssr"]}
 codee = {version="0.2", features = ["json_serde_wasm"]}
 
 [workspace]
