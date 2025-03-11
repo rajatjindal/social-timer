@@ -23,6 +23,8 @@ jobs:
 
       - name: Install Spin
         uses: fermyon/actions/spin/setup@v1
+        with:
+          plugins: cloud
 
       - name: Build and deploy
         uses: fermyon/actions/spin/deploy@v1
