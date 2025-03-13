@@ -1,5 +1,6 @@
 # Deploy only when a change is pushed or merged to `main`
 on:
+  workflow_dispatch: {}
   push:
     branches:
       - main
